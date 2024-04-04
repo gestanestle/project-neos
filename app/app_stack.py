@@ -2,6 +2,8 @@ from aws_cdk import (
     # Duration,
     Stack,
     # aws_sqs as sqs,
+    aws_lambda as _lambda,
+    aws_apigateway as apigw
 )
 from constructs import Construct
 
@@ -17,3 +19,20 @@ class AppStack(Stack):
         #     self, "AppQueue",
         #     visibility_timeout=Duration.seconds(300),
         # )
+
+        hello = _lambda.Function(self, 'helloFunc',
+            runtime=_lambda.Runtime.PYTHON_3_11,  
+            handler='hello.handler',
+            code=_lambda.Code.from_asset('app/lambda/')
+        )
+
+        # api = apigw.RestApi(self, "HelloFuncAPI")
+        # integration = apigw.LambdaIntegration(hello)
+        # api.root.add_method("GET", integration)
+
+        api = apigw.LambdaRestApi(self, "HelloFuncAPI", handler=hello)
+
+        items = api.root.add_resource("greetings")
+        items.add_method("GET") # GET /items
+
+        
