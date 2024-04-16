@@ -20,12 +20,12 @@ class TransactionManager(Construct):
             billing_mode=ddb.BillingMode.PROVISIONED,
             read_capacity=20,
             write_capacity=20,
-            sort_key={'name': 'timestamp', 'type:': ddb.AttributeType.STRING},
+            sort_key={'name': 'timestamp', 'type': ddb.AttributeType.STRING},
         )
 
         table.add_local_secondary_index(
             index_name='accountIdx',
-            sort_key={'name': 'accountId', type: ddb.AttributeType.STRING}
+            sort_key={'name': 'account_id', 'type': ddb.AttributeType.STRING}
         )
 
         self._handler = _lambda.Function(
@@ -34,7 +34,7 @@ class TransactionManager(Construct):
             handler='transactions.handler',
             code=_lambda.Code.from_asset('app/lambda'),
             environment={
-                'HITS_TABLE_NAME': table.table_name,
+                'TABLE_NAME': table.table_name,
             }
         )
 
