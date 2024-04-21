@@ -22,39 +22,32 @@ def handler(event, context):
     }
 
     try:
-        if event['httpMethod'] == "GET":
-            accId = event['queryStringParameters']['account_id']
+        if event['httpMethod'] == 'GET':
+            if event['queryStringParameters'] is not None:
+                accId = event['queryStringParameters']['account_id']
 
-            response = table.scan(FilterExpression = Attr('account_id').eq(accId))
-            items = response['Items']
+                response = table.scan(FilterExpression = Attr('account_id').eq(accId))
+                items = response['Items']
 
-            while 'LastEvaluatedKey' in response:
-                response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
-                items.extend(response['Items'])
+                while 'LastEvaluatedKey' in response:
+                    response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+                    items.extend(response['Items'])
 
-            body = []
-            for item in items:
-                body.append(item)
+                body = []
+                for item in items:
+                    body.append(item)
 
-            body = str(body)
+                body = str(body)
 
-        elif event['httpMethod'] == "GET" and event['path'] == "/{id}/":
-            items = table.get_item(
-                Key={'id': event['pathParameters']['id']}
-            )
-            item = items["Item"]
-            body = [{
-                    'id': item['id'], 
-                    'ref_id': item['ref_id'],
-                    'account_id': item['account_id'],
-                    'type': item['type'],
-                    'amount': item['amount'],
-                    'timestamp': item['timestamp']
-            }]
-            body = str(body)
+            elif  event['resource'] == '/api/transactions/{id}':
+                id = event['pathParameters']['id']
+                response = table.get_item(
+                    Key={'id':id}
+                )
+                item = response['Item']
+                body = str(item)
 
-
-        elif event['httpMethod'] == "POST":
+        elif event['httpMethod'] == 'POST':
             requestJSON = json.loads(event['body'])
 
             ref_id = generate_ref_id()
@@ -107,7 +100,7 @@ def handler(event, context):
                 
             body = 'Create transaction with Reference ID: ' + ref_id
         
-    except Exception as e:
+    except Exception as e:  
         statusCode = 400
         body = str(e)
 
@@ -124,6 +117,3 @@ def handler(event, context):
 def generate_ref_id():
   char_pool = string.ascii_letters + string.digits
   return ''.join(random.choices(char_pool, k=10))
-
-def obj_dict(obj):
-    return obj._asdict

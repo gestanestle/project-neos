@@ -17,8 +17,13 @@ class AppStack(Stack):
         api = apigw.RestApi(self, 'TransactionsAPI')   
 
         integration = apigw.LambdaIntegration(transactions.handler)
-        api.root.add_method('GET', integration)
-        api.root.add_method('POST', integration)
+
+        apiV = api.root.add_resource('api')
+        tranx = apiV.add_resource('transactions')
+        tranx.add_method('POST', integration)
+        tranx.add_method('GET', integration)
+        tranxById = tranx.add_resource('{id}')
+        tranxById.add_method('GET', integration)
 
     
         
