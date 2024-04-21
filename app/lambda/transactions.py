@@ -1,12 +1,13 @@
 import os
 import json
 import boto3
-from decimal import Decimal
+import decimal
 from boto3.dynamodb.conditions import Key, Attr
 import random
 import string
 import uuid
 import time
+import simplejson as sjson
 
 client = boto3.client('dynamodb')
 dynamodb = boto3.resource("dynamodb")
@@ -14,12 +15,11 @@ table = dynamodb.Table(os.environ['TABLE_NAME'])
 time = time.time()
 
 def handler(event, context):
-    print(event)
-    body = {}
-    statusCode = 200
+    statusCode = 200 
     headers = {
         "Content-Type": "application/json"
     }
+    body = {}
 
     try:
         if event['httpMethod'] == 'GET':
@@ -35,9 +35,8 @@ def handler(event, context):
 
                 body = []
                 for item in items:
+                    item['amount'] = float(sjson.dumps(item['amount']))
                     body.append(item)
-
-                body = str(body)
 
             elif  event['resource'] == '/api/transactions/{id}':
                 id = event['pathParameters']['id']
@@ -45,7 +44,8 @@ def handler(event, context):
                     Key={'id':id}
                 )
                 item = response['Item']
-                body = str(item)
+                item['amount'] = float(sjson.dumps(item['amount']))
+                body = item
 
         elif event['httpMethod'] == 'POST':
             requestJSON = json.loads(event['body'])
@@ -98,7 +98,8 @@ def handler(event, context):
                         'timestamp': str(time)
                 })
                 
-            body = 'Create transaction with Reference ID: ' + ref_id
+            body = { 'ref_id': ref_id }
+
         
     except Exception as e:  
         statusCode = 400
@@ -106,11 +107,9 @@ def handler(event, context):
 
     res = {
         "statusCode": statusCode,
-        "headers": {
-            "Content-Type": "application/json"
-        },
+        "headers": headers,
         "body": json.dumps(body)
-        }
+    }
     return res
 
 
