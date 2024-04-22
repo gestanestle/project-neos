@@ -40,12 +40,14 @@ def handler(event, context):
 
             elif  event['resource'] == '/api/transactions/{id}':
                 id = event['pathParameters']['id']
-                response = table.get_item(
-                    Key={'id':id}
-                )
-                item = response['Item']
-                item['amount'] = float(sjson.dumps(item['amount']))
-                body = item
+                response = table.get_item(Key={'id':id})
+                try:
+                    item = response['Item']
+                    item['amount'] = float(sjson.dumps(item['amount']))
+                    body = item
+                except KeyError:
+                    body = "Transaction doesn't exist."
+
 
         elif event['httpMethod'] == 'POST':
             requestJSON = json.loads(event['body'])

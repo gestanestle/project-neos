@@ -59,9 +59,12 @@ def handler(event, context):
 
             if event['httpMethod'] == 'GET':
                 response = table.get_item(Key={'id':id})
-                item = response['Item']
-                item['balance'] = float(sjson.dumps(item['balance']))
-                body = item
+                try:
+                    item = response['Item']
+                    item['balance'] = float(sjson.dumps(item['balance']))
+                    body = item
+                except KeyError:
+                    body = "Account doesn't exist."
 
             elif event['httpMethod'] == 'DELETE':
                 table.delete_item(Key={'id':id})
@@ -84,7 +87,7 @@ def handler(event, context):
                     },
                     ReturnValues="UPDATED_NEW",
                 )
-                body = None
+                body = item['Attributes']
         
     except Exception as e:  
         statusCode = 400
